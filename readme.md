@@ -8,6 +8,7 @@
 - `list()` help to create a list and make a copy of another list with different memory address
 - `complex(re, img)` help to make complex numbers
 - `sorted(iterable, reverse=False)`
+- `sum()`
 
 ###### String Methods
 
@@ -65,7 +66,6 @@
   - `np.logical_or()`
   - `np.logical_not()`
 
-
 > Intermediate Python
 
 ###### Matplotlib
@@ -94,6 +94,19 @@
 - `dict.values()`
 - `dict.keys()`
 - `del(dict[key])`
+- `dict` and `zip` converts `list` to `dict`
+
+  ```python
+  # Zip lists: zipped_lists
+  zipped_lists = zip(['CountryName', 'CountryCode', 'IndicatorName', 'IndicatorCode', 'Year', 'Value'], ['Arab World', 'ARB', 'Adolescent fertility rate (births per 1,000 women ages 15-19)', 'SP.ADO.TFRT', '1960', '133.56090740552298'])
+
+  # Create a dictionary: rs_dict
+  rs_dict = dict(zipped_lists)
+
+  # Print the dictionary
+  print(rs_dict)
+  # {'CountryName': 'Arab World', 'CountryCode': 'ARB', 'IndicatorName': 'Adolescent fertility rate (births per 1,000 women ages 15-19)', 'IndicatorCode': 'SP.ADO.TFRT', 'Year': '1960', 'Value': '133.56090740552298'}
+  ```
 
 ###### Pandas
 
@@ -110,6 +123,7 @@
   ```
 - `pd.read_csv('name.csv')`
 - `pd.read_csv('name.csv', index_col=0)` reads without index values
+- `pd.read_csv(csv_file, chunksize=c_size)` reads `c_size` numbers of rows at a time
 - Some code examples
 
   - Subsetting
@@ -337,9 +351,65 @@
   """
   ```
 
+- Pandas and iterators
+
+  ```python
+  # Import the pandas package
+  import pandas as pd
+
+  # Initialize reader object: df_reader
+  df_reader = pd.read_csv('ind_pop.csv', chunksize=10)
+
+  # Print two chunks
+  print(next(df_reader))
+  print(next(df_reader))
+  ```
+- Pandas and plot
+  ```python
+  pd.DataFrame().plot(kind='scatter', x='Year', y='Total Urban Population')
+  plt.show()
+  ```
+
 ###### Looping
 
 - `enumerate(...)` gives index and value respectively
+- `zip()`
+
+  ```python
+  for value1, value2, value3 in zip([1, 2, 3], ['a', 'b', 'c'], [.5, .1, .15]):
+    print(value1, value2, value3)
+  """
+  1 a 0.5
+  2 b 0.1
+  3 c 0.15
+  """
+  ```
+
+- `*zip()` unzips the zip
+
+  ```python
+  mutants = ('charles xavier', 'bobby drake', 'kurt wagner', 'max eisenhardt', 'kitty pryde')
+  powers = ('telepathy', 'thermokinesis', 'teleportation', 'magnetokinesis', 'intangibility')
+  # Create a zip object from mutants and powers: z1
+  z1 = zip(mutants, powers)
+
+  # Print the tuples in z1 by unpacking with *
+  print(*z1)
+
+  # Re-create a zip object from mutants and powers: z1
+  z1 = zip(mutants, powers)
+
+  # 'Unzip' the tuples in z1 by unpacking with * and zip(): result1, result2
+  result1, result2 = zip(*z1)
+
+  # Check if unpacked tuples are equivalent to original tuples
+  print(result1 == mutants)
+  print(result2 == powers)
+  # ('charles xavier', 'telepathy') ('bobby drake', 'thermokinesis') ('kurt wagner', 'teleportation') ('max eisenhardt', 'magnetokinesis') ('kitty pryde', 'intangibility')
+  # True
+  # True
+  ```
+
 - `dict.items()` gives key and value respectively
 - `np.nditer()` helps to loop over multidimensional arrays
 
@@ -413,4 +483,264 @@
   # Code for loop that adds COUNTRY column
   for lab, row in cars.iterrows():
       cars.loc[lab, 'COUNTRY'] = row['country'].upper()
+  ```
+
+> Python Data Science Toolbox (Part 1)
+
+- `global` makes variable available globally
+- `nonlocal` make nested function's variable available for its parent functions
+
+  ```python
+  # Define echo_shout()
+  def echo_shout(word):
+      """Change the value of a nonlocal variable"""
+
+      # Concatenate word with itself: echo_word
+      echo_word = word + word
+
+      # Print echo_word
+      print(echo_word)
+
+      # Define inner function shout()
+      def shout():
+          """Alter a variable in the enclosing scope"""
+          # Use echo_word in nonlocal scope
+          nonlocal echo_word
+
+          # Change echo_word to echo_word concatenated with '!!!'
+          echo_word = echo_word + '!!!'
+
+      # Call function shout()
+      shout()
+
+      # Print echo_word
+      print(echo_word)
+
+  # Call function echo_shout() with argument 'hello'
+  echo_shout('hello')
+  ```
+
+- To get all the builtins in python
+  ```python
+  import builtins
+  dir(builtins)
+  ```
+- `map(func, *iterables)`
+- `lambda arg: statement`
+
+  ```python
+  # Create a list of strings: spells
+  spells = ["protego", "accio", "expecto patronum", "legilimens"]
+
+  # Use map() to apply a lambda function over spells: shout_spells
+  shout_spells = map(lambda a: a + '!!!', spells)
+
+  # Convert shout_spells to a list: shout_spells_list
+  shout_spells_list = list(shout_spells)
+
+  # Print the result
+  print(shout_spells_list)
+  # ['protego!!!', 'accio!!!', 'expecto patronum!!!', 'legilimens!!!']
+  ```
+
+- `filter(function or None, iterable)`
+
+  ```python
+  # Create a list of strings: fellowship
+  fellowship = ['frodo', 'samwise', 'merry', 'pippin', 'aragorn', 'boromir', 'legolas', 'gimli', 'gandalf']
+
+  # Use filter() to apply a lambda function over fellowship: result
+  result = filter(lambda a: len(a) > 6, fellowship)
+
+  # Convert result to a list: result_list
+  result_list = list(result)
+
+  # Print result_list
+  print(result_list)
+  # ['samwise', 'aragorn', 'boromir', 'legolas', 'gandalf']
+  ```
+
+- `functools.reduce(...)` is useful for performing some computation on a `list` and, unlike `map()` and `filter()`, returns a single value as a result.
+
+  ```python
+  # Import reduce from functools
+  from functools import reduce
+
+  # Create a list of strings: stark
+  stark = ['robb', 'sansa', 'arya', 'brandon', 'rickon']
+
+  # Use reduce() to apply a lambda function over stark: result
+  result = reduce(lambda item1, item2: item1 + item2, stark)
+
+  # Print the result
+  print(result)
+  # robbsansaaryabrandonrickon
+  ```
+
+> Python Data Science Toolbox (Part 2)
+
+- `iter()` and `next()`
+
+  ```python
+  # Create a list of strings: flash
+  flash = ['jay garrick', 'barry allen', 'wally west', 'bart allen']
+
+  # Print each list item in flash using a for loop
+  for i in flash:
+      print(i)
+
+
+  # Create an iterator for flash: superhero
+  superhero = iter(flash)
+
+  # Print each item from the iterator
+  print(next(superhero))
+  print(next(superhero))
+  print(next(superhero))
+  print(next(superhero))
+
+  ```
+
+###### List Comprehensions
+
+- Dict comprehensions
+
+  ```python
+  # Create a list of strings: fellowship
+  fellowship = ['frodo', 'samwise', 'merry', 'aragorn', 'legolas', 'boromir', 'gimli']
+
+  # Create dict comprehension: new_fellowship
+  new_fellowship = {v: len(v) for v in fellowship}
+
+  # Print the new dictionary
+  print(new_fellowship)
+  ```
+
+- List comprehensions
+
+  ```python
+  # Create a 5 x 5 matrix using a list of lists: matrix
+  matrix = [[col for col in range(0, 5)] for row in range(0, 5)]
+
+  # Print the matrix
+  for row in matrix:
+      print(row)
+  ```
+
+- Conditionals list comprehensions
+
+  ```python
+  # Create a list of strings: fellowship
+  fellowship = ['frodo', 'samwise', 'merry', 'aragorn', 'legolas', 'boromir', 'gimli']
+
+  # Create list comprehension: new_fellowship
+  new_fellowship = [member for member in fellowship if len(member) >= 7]
+
+  # Print the new list
+  print(new_fellowship)
+
+  """
+  In the previous part, you used an if conditional statement in the predicate expression part of a list comprehension to evaluate an iterator variable. In this exercise, you will use an if-else statement on the output expression of the list.
+  """
+  # Create a list of strings: fellowship
+  fellowship = ['frodo', 'samwise', 'merry', 'aragorn', 'legolas', 'boromir', 'gimli']
+
+  # Create list comprehension: new_fellowship
+  new_fellowship = [member if len(member) >= 7 else '' for member in fellowship]
+
+  # Print the new list
+  print(new_fellowship)
+  ```
+
+###### Generator Expressions
+
+- Examples
+
+  ```python
+  # Create generator object: result
+  result = (num for num in range(31))
+
+  # Print the first 5 values
+  print(next(result))
+  print(next(result))
+
+  # Print the rest of the values
+  for value in result:
+      print(value)
+  ```
+
+- Custom generators
+
+  ```python
+  # Create a list of strings
+  lannister = ['cersei', 'jaime', 'tywin', 'tyrion', 'joffrey']
+
+  # Define generator function get_lengths
+  def get_lengths(input_list):
+      """Generator function that yields the
+      length of the strings in input_list."""
+
+      # Yield the length of a string
+      for person in input_list:
+          yield len(person)
+
+  # Print the values generated by get_lengths()
+  for value in get_lengths(lannister):
+      print(value)
+  ```
+
+###### Files
+
+- `file.readline()`
+  ```python
+  with open(file_name) as file:
+    file.readline()
+  ```
+- File and generators
+
+  ```python
+  # Define read_large_file()
+  def read_large_file(file_object):
+      """A generator function to read a large file lazily."""
+
+      # Loop indefinitely until the end of the file
+      while True:
+
+          # Read a line from the file: data
+          data = file_object.readline()
+
+          # Break if this is the end of the file
+          if not data:
+              break
+
+          # Yield the line of data
+          yield data
+  # Open a connection to the file
+  with open('world_dev_ind.csv') as file:
+
+      # Create a generator object for the file: gen_file
+      gen_file = read_large_file(file)
+
+      # Print the first three lines of the file
+      print(next(gen_file))
+      print(next(gen_file))
+      print(next(gen_file))
+
+  # Initialize an empty dictionary: counts_dict
+  counts_dict = {}
+  # Open a connection to the file
+  with open('world_dev_ind.csv') as file:
+
+      # Iterate over the generator from read_large_file()
+      for line in read_large_file(file):
+
+          row = line.split(',')
+          first_col = row[0]
+
+          if first_col in counts_dict.keys():
+              counts_dict[first_col] += 1
+          else:
+              counts_dict[first_col] = 1
+  # Print
+  print(counts_dict)
   ```
