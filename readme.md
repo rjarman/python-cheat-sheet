@@ -46,21 +46,52 @@
     c = a[b == 'M'] >> array([184, 181])
     d = a[b != 'M'] >> array([191, 185, 180])
     ```
+- `np.sqrt()`
+- `np.sort()`
+- `np.arange(start(include), stop(exclude), step)` returns evenly spaced values within a given interval
 - Subsetting for multidimensional array because one dimensional rules are same as `list`
   - `mul_arr[49, :]` selects 50th row
   - `mul_arr[:, 1]` selects second column of every row
   - `mul_arr[123, 0]` selects 124th 1st column value
 - Statistics
+
   - `np.mean()`
   - `np.median()`
+  - `np.var()`
+
+    - The mean squared distance of the data from their mean
+    - Informally, a measure of the spread of data
+
+    ![Variance formula](assets/variance_formula.png 'Variance Formula')
+
   - `np.std()`
-  - `np.corrcoef()`
-- Hacker Statistics
-  - `np.random.seed()`
-  - `np.random.rand()` generates random float
-  - `np.random.randint(start(include), end(exclude))` generates random integer
-  - `np.transpose()`
-  - `np.random.rand()` generates random value between 0 and 1
+    When we calculate the variance it involves square function so that to convert them to the same unit there is a term called standard deviation. It is clear that the standard deviation is a reasonable metric for the typical spread of the data.
+  - `np.cov(..., ...)`
+    We want a number that summarizes how Obama's vote share varies with the total vote count.
+    There are two types:
+
+    1. Positive
+       If x and y both tend to be above, or both below their respective means together. This means that they are positively correlated. For example, when the county is populous, it has more votes for Obama.
+    1. Negative
+       If x is high while y is low, the covariance is negative, and the data are negatively correlated, or anti-correlated.
+
+    ![Covariance formula](assets/covariance_formula.png 'Covariance Formula')
+
+  - `np.corrcoef(..., ...)`
+    It is dimensionless and ranges from -1 (for complete anti-correlation) to 1 (for complete correlation).
+    ![CorrCoef formula](assets/corrcoef_formula.png 'CorrCoef Formula')
+    For example:
+    ![CorrCoef example](assets/corrcoef_example.png 'CorrCoef Example')
+  - `np.percentile()`
+    ```python
+    # Specify array of percentiles: percentiles
+    percentiles = np.array([2.5, 25, 50, 75, 97.5])
+    # Compute percentiles: ptiles_vers
+    ptiles_vers = np.percentile(versicolor_petal_length, percentiles)
+    # Print the result
+    print(ptiles_vers)
+    ```
+
 - Logical operations
   - `np.logical_and()`
   - `np.logical_or()`
@@ -88,6 +119,8 @@
   then it will mark the horizontal axis on 1000, 10000, 100000 as 1k, 10k, 100k
 - `plt.text(x, y, 'text')` it will write a text on (x, y) positions
 - `plt.grid()` defines whether there need to put grid lines on view or not
+- `plt.margins()` makes sure none of the data points run over the side of the plot area. Choosing a value of .02 gives a 2% buffer all around the plot.
+- `plt.legend()`
 
 ###### Dictionaries
 
@@ -364,6 +397,7 @@
   print(next(df_reader))
   print(next(df_reader))
   ```
+
 - Pandas and plot
   ```python
   pd.DataFrame().plot(kind='scatter', x='Year', y='Total Urban Population')
@@ -744,3 +778,374 @@
   # Print
   print(counts_dict)
   ```
+
+> Statistical Thinking in Python (Part 1)
+
+- sns.set() sets `seaborn` as default style for `matplotlib`
+  ```python
+  # Import plotting modules
+  import matplotlib.pyplot as plt, seaborn as sns
+  # Set default Seaborn style
+  sns.set()
+  # Plot histogram of versicolor petal lengths
+  plt.hist(versicolor_petal_length)
+  # Show histogram
+  plt.show()
+  ```
+- `sns.swarmplot(x='df_col_name', y='df_col_name', data=df)`
+- `sns.boxplot(x='df_col_name', y='df_col_name', data=df)`
+  ![Boxplot demo](assets/boxplot_demo.png 'Boxplot Demo')
+- `sns.countplot(x, y, hue, data, palette)`
+  ```python
+  plt.figure()
+  sns.countplot(x='missile', hue='party', data=df, palette='RdBu')
+  plt.xticks([0,1], ['No', 'Yes'])
+  plt.show()
+  ```
+
+###### Empirical cumulative distribution function (ECDF)
+
+The bee swarm plot has a real problem. The edges have overlapping data points, which was necessary in order to fit all points onto the plot. We are now obfuscating data. So, using a bee swarm plot here is not the best option. As an alternative, we can compute an empirical cumulative distribution function, or ECDF.
+![ECDF snapshot](assets/ecdf_snap.png 'An ECDF snapshot')
+
+```python
+def ecdf(data):
+    """Compute ECDF for a one-dimensional array of measurements."""
+    # Number of data points: n
+    n = len(data)
+
+    # x-data for the ECDF: x
+    x = np.sort(data)
+
+    # y-data for the ECDF: y
+    y = np.arange(1, n + 1) / n
+
+    return x, y
+# Compute ECDFs
+x_set, y_set = ecdf(setosa_petal_length)
+x_vers, y_vers = ecdf(versicolor_petal_length)
+x_virg, y_virg = ecdf(virginica_petal_length)
+
+# Plot all ECDFs on the same plot
+plt.plot(x_set, y_set, marker='.', linestyle='none')
+plt.plot(x_vers, y_vers, marker='.', linestyle='none')
+plt.plot(x_virg, y_virg, marker='.', linestyle='none')
+
+# Annotate the plot
+plt.legend(('setosa', 'versicolor', 'virginica'), loc='lower right')
+_ = plt.xlabel('petal length (cm)')
+_ = plt.ylabel('ECDF')
+
+# Display the plot
+plt.show()
+```
+
+![ECDF example](assets/ecdf_example.svg 'An ECDF example')
+
+###### Statistical inference
+
+It is the process through which inferences about a population are made based on certain statistics calculated from a sample of data drawn from that population.
+![Statistical inference](assets/statistical_inference.gif 'Statistical Inference')
+
+###### Hacker Statistics
+
+- `np.random.seed()`
+- `np.random.random()` returns random floats in the half-open interval `[0.0, 1.0)`
+- `np.random.rand()` generates random float
+- `np.random.randint(start(include), end(exclude))` generates random integer
+- `np.transpose()`
+- `np.random.rand()` generates random value between 0 and 1
+- `np.empty()`
+
+###### Probability Distribution(Discrete Variables)
+
+A mathematical description of outcomes.
+
+- Bernoulli Trials
+
+  You can think of a Bernoulli trial as a flip of a possibly biased coin. Specifically, each coin flip has a probability of landing heads (success) and probability of landing tails (failure).
+
+  ```python
+  def perform_bernoulli_trials(n, p):
+      """Perform n Bernoulli trials with success probability p
+      and return number of successes."""
+      # Initialize number of successes: n_success
+      n_success = 0
+
+      # Perform trials
+      for i in range(n):
+          # Choose random number between zero and one: random_number
+          random_number = np.random.random()
+
+          # If less than p, it's a success so add one to n_success
+          if random_number < p:
+              n_success+=1
+
+      return n_success
+  # example
+  for i in range(1000):
+      n_defaults[i] = perform_bernoulli_trials(100, 0.05)
+  print(n_defaults[:5])
+  # [6. 5. 7. 8. 5.]
+  ```
+
+- Probability Mas Function(PMF)
+  The set of probabilities of discrete outcomes. It's a property of discrete probability distribution.
+- Discrete uniform distribution
+  The outcome of rolling a single fair die is
+  - Discrete
+  - Uniformly distributed
+- Binomial distribution
+
+  - The number r of successes in n Bernoulli trials with probability p of success, is Binomially distributed.
+  - The number r of heads in 4 coin flips with probability 0.5 of heads, is Binomially distributed.
+  - `np.random.binomial(n, p, size)` operates `size` number of samples with `n` number of bernoulli trials with probability of success `p`
+  - The binomial PMF
+
+  ```python
+  # Compute bin edges: bins
+  bins = np.arange(0, max(n_defaults) + 1.5) - 0.5
+  # Generate histogram
+  plt.hist(n_defaults, normed=True, bins=bins)
+  # Label axes
+  plt.xlabel('numbers of defaults')
+  plt.ylabel('probability')
+  # Show the plot
+  plt.show()
+  ```
+
+  - The binomial CDF
+
+  ```python
+  # Take 10,000 samples out of the binomial distribution: n_defaults
+  n_defaults = np.random.binomial(n=100, p=0.05, size=10000)
+  # Compute CDF: x, y
+  x, y = ecdf(n_defaults)
+  # Plot the CDF with axis labels
+  plt.plot(x, y, marker='.', linestyle='none')
+  plt.xlabel('number of defaults')
+  plt.ylabel('CDF')
+  # Show the plot
+  plt.show()
+  ```
+
+  ![Binomial CDF](assets/binomial_cdf.svg 'Binomial CDF')
+
+- Poisson process
+  A process is a poisson process if the timing of the next event is completely independent of when the previous event happened.
+  Examples of poisson process
+  - Natural births in a given hospital
+  - Hit on a website during a given hour
+  - Meteor strikes
+  - Molecular collisions in a gas
+  - Aviation incidents
+  - Arrival of busses in a bus stand
+- Poisson distribution
+  - The number r of arrivals of a poisson process in a given time interval with average rate of ? arrivals per interval is poisson distributed.
+  - The number r of hits on a website in one hour with an average hit rate of 6 hits per hour is poisson distributed.
+  - It's a limit of the binomial distribution for low probability of success and large number of trials and also for rare events.
+- Relationship between Binomial and Poisson distributions
+  You just heard that the Poisson distribution is a limit of the Binomial distribution for rare events. This makes sense if you think about the stories. Say we do a Bernoulli trial every minute for an hour, each with a success probability of `0.1`. We would do `60` trials, and the number of successes is Binomially distributed, and we would expect to get about `6` successes. This is just like the Poisson story we discussed in the video, where we get on average `6` hits on a website per hour. So, the Poisson distribution with arrival rate equal to `np` approximates a Binomial distribution for `n` Bernoulli trials with probability `p` of success (with `n` large and `p` small). Importantly, the Poisson distribution is often simpler to work with because it has only one parameter instead of two for the Binomial distribution.
+
+  ```python
+  # Draw 10,000 samples out of Poisson distribution: samples_poisson
+  samples_poisson = np.random.poisson(10, 10000)
+
+  # Print the mean and standard deviation
+  print('Poisson: ', np.mean(samples_poisson), np.std(samples_poisson))
+
+  # Specify values of n and p to consider for Binomial: n, p
+  n, p = [20, 100, 1000], [0.5, 0.1, 0.01]
+
+  # Draw 10,000 samples for each n,p pair: samples_binomial
+  for i in range(3):
+      samples_binomial = np.random.binomial(n[i], p[i], 10000)
+
+      # Print results
+      print('n =', n[i], 'Binom:', np.mean(samples_binomial), np.std(samples_binomial))
+  """
+  Poisson:      10.0186 3.144813832327758
+  n = 20 Binom: 9.9637 2.2163443572694206
+  n = 100 Binom: 9.9947 3.0135812433050484
+  n = 1000 Binom: 9.9985 3.139378561116833
+  """
+  ```
+
+  Example:
+
+  1. How many no-hitters in a season?
+     In baseball, a no-hitter is a game in which a pitcher does not allow the other team to get a hit. This is a rare event, and since the beginning of the so-called modern era of baseball (starting in 1901), there have only been 251 of them through the 2015 season in over 200,000 games. The ECDF of the number of no-hitters in a season is shown to the right. Which probability distribution would be appropriate to describe the number of no-hitters we would expect in a given season?
+     Ans: Both Binomial and Poisson, though Poisson is easier to model and compute.
+  1. Was 2015 anomalous?
+     1990 and 2015 featured the most no-hitters of any season of baseball (there were seven). Given that there are on average 251/115 no-hitters per season, what is the probability of having seven or more in a season?
+
+     ```python
+     # Draw 10,000 samples out of Poisson distribution: n_nohitters
+     n_nohitters = np.random.poisson(251/115, 10000)
+
+     # Compute number of samples that are seven or greater: n_large
+     n_large = np.sum(n_nohitters >= 7)
+
+     # Compute probability of getting seven or more: p_large
+     p_large = n_large / len(n_nohitters)
+
+     # Print the result
+     print('Probability of seven or more no-hitters:', p_large)
+     ```
+
+###### Probability Distribution(Continuos Variables)
+
+- Probability density function(PDF)
+
+  - It's a continuos analog to the PMF
+  - It's a mathematical description of the relative likelihood of observing a value of a continuous variables
+    ![Normal PDF](assets/normal_pdf.png 'Normal PDF')
+    Remember that the CDF gives the probability the measured speed of light will be less than the value on the x-axis.
+    ![Normal CDF](assets/normal_cdf.png 'Normal CDF')
+
+- Normal distribution
+  Describes a continuous variable whose PDF has a single symmetric peak.
+  ![Normal snap](assets/normal_snap.png 'Normal Distribution Snap')
+  | Parameters of normal distribution | Status | Calculated from data while EDA |
+  | --------------------------------- | ------ | ------------------------------ |
+  | mean | &#8800;| mean |
+  | standard deviation | &#8800;| standard deviation |
+
+  - `np.random.normal(mean, std_deviation, size)`
+  - The normal PDF
+
+    ```python
+    # Draw 100000 samples from Normal distribution with stds of interest: samples_std1, samples_std3, samples_std10
+    samples_std1, samples_std3, samples_std10 = np.random.normal(20, 1, 100000), np.random.normal(20, 3, 100000), np.random.normal(20, 10, 100000)
+
+    # Make histograms
+    plt.hist(samples_std1, bins=100, normed=True, histtype='step')
+    plt.hist(samples_std3, bins=100, normed=True, histtype='step')
+    plt.hist(samples_std10, bins=100, normed=True, histtype='step')
+
+    # Make a legend, set limits and show plot
+    _ = plt.legend(('std = 1', 'std = 3', 'std = 10'))
+    plt.ylim(-0.01, 0.42)
+    plt.show()
+    ```
+
+    ![Normal PDF](assets/normal_pdf_2.svg 'Normal PDF')
+
+  - The normal CDF
+
+    ```python
+    # Generate CDFs
+    x_std1, y_std1 = ecdf(samples_std1)
+    x_std3, y_std3 = ecdf(samples_std3)
+    x_std10, y_std10 = ecdf(samples_std10)
+
+    # Plot CDFs
+    plt.plot(x_std1, y_std1, marker=".", linestyle="none")
+    plt.plot(x_std3, y_std3, marker=".", linestyle="none")
+    plt.plot(x_std10, y_std10, marker=".", linestyle="none")
+
+    # Make a legend and show the plot
+    _ = plt.legend(('std = 1', 'std = 3', 'std = 10'), loc='lower right')
+    plt.show()
+    ```
+
+    ![Normal CDF](assets/normal_cdf.svg 'Normal CDF')
+
+  - Light tails of the Normal distribution
+    If we look at the Normal distribution, the probability of being more than four standard deviations from the mean is very small. This means that when you are modeling data as Normally distributed, outliers are extremely unlikely. Real data sets often have extreme values, and when this happens, the Normal distribution might not be the best description of your data.
+    ![Normal disadvantage](assets/normal_disadvantage.png 'Normal Disadvantage')
+  - Example
+
+    1. Are the Belmont Stakes results Normally distributed?
+       Since 1926, the Belmont Stakes is a 1.5 mile-long race of 3-year old thoroughbred horses. Secretariat ran the fastest Belmont Stakes in history in 1973. While that was the fastest year, 1970 was the slowest because of unusually wet and sloppy conditions. With these two outliers removed from the data set, compute the mean and standard deviation of the Belmont winners' times. Sample out of a Normal distribution with this mean and standard deviation using the np.random.normal() function and plot a CDF. Overlay the ECDF from the winning Belmont times. Are these close to Normally distributed?
+
+       ```python
+        # Compute mean and standard deviation: mu, sigma
+        mu, sigma = belmont_no_outliers.mean(), belmont_no_outliers.std()
+
+        # Sample out of a normal distribution with this mu and sigma: samples
+        samples = np.random.normal(mu, sigma, 10000)
+
+        # Get the CDF of the samples and of the data
+        x, y = ecdf(belmont_no_outliers)
+        x_theor, y_theor = ecdf(samples)
+
+        # Plot the CDFs and show the plot
+        _ = plt.plot(x_theor, y_theor)
+        _ = plt.plot(x, y, marker='.', linestyle='none')
+        _ = plt.xlabel('Belmont winning time (sec.)')
+        _ = plt.ylabel('CDF')
+        plt.show()
+       ```
+
+    1. What are the chances of a horse matching or beating Secretariat's record?
+       Assume that the Belmont winners' times are Normally distributed (with the 1970 and 1973 years removed), what is the probability that the winner of a given Belmont Stakes will run it as fast or faster than Secretariat?
+
+       ```python
+       # Take a million samples out of the Normal distribution: samples
+       samples = np.random.normal(mu, sigma, 1000000)
+
+       # Compute the fraction that are faster than 144 seconds: prob
+       prob = np.sum(samples <= 144) / len(samples)
+
+       # Print the result
+       print('Probability of besting Secretariat:', prob)
+       ```
+
+- Exponential distribution
+  The waiting time between arrivals of a poisson process is exponentially distributed.
+  Examples:
+
+  1. Nuclear incidents:
+     Timing of one is independent of all others so it's a poisson process and the time is exponentially distributed.
+  1. How might we expect the time between Major League no-hitters to be distributed? Be careful here: a few exercises ago, we considered the probability distribution for the number of no-hitters in a season. Now, we are looking at the probability distribution of the time between no hitters.
+     Ans: Exponential
+  1. Unfortunately, Justin was not alive when Secretariat ran the Belmont in 1973. Do you think he will get to see a performance like that? To answer this, you are interested in how many years you would expect to wait until you see another performance like Secretariat's. How is the waiting time until the next performance as good or better than Secretariat's distributed? Choose the best answer.
+
+     1. Normal, because the distribution of Belmont winning times are Normally distributed.
+     1. Normal, because there is a most-expected waiting time, so there should be a single peak to the distribution.
+     1. Exponential: It is very unlikely for a horse to be faster than Secretariat, so the distribution should decay away to zero for high waiting time.
+     1. Exponential: A horse as fast as Secretariat is a rare event, which can be modeled as a Poisson process, and the waiting time between arrivals of a Poisson process is Exponentially distributed.
+
+     Ans: 4
+
+- `np.random.exponential(mean, size)`
+
+  ```python
+  # Draw samples of waiting times: waiting_times
+  waiting_times = np.random.exponential(715, 100000)
+
+  # Make the histogram
+  plt.hist(waiting_times, bins=100, normed=True, histtype='step')
+
+  # Label axes
+  plt.xlabel('waiting games')
+  plt.ylabel('PDF')
+
+  # Show the plot
+  plt.show()
+  ```
+
+  ![Exponential PDF](assets/exp_pdf.svg 'Exponential PDF')
+
+  ```python
+  # Draw samples of waiting times: waiting_times
+  waiting_times = np.random.exponential(715, 100000)
+
+  x, y = ecdf(waiting_times)
+  plt.plot(x, y)
+
+  # Label axes
+  plt.xlabel('waiting games')
+  plt.ylabel('CDF')
+
+  # Show the plot
+  plt.show()
+  ```
+
+  ![Exponential CDF](assets/exp_cdf.svg 'Exponential CDF')
+
+> References
+
+- [Images](https://google.com/)
+- [DataCamp](https://learn.datacamp.com/)
