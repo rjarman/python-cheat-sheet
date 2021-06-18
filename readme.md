@@ -24,6 +24,9 @@
 
 ###### NumPy
 
+- `np.reshape(arr, newshape)`
+- `np.linspace(start, stop)` returns evenly spaced numbers over a specified interval.
+- `np.logspace(start, stop)` returns numbers spaced evenly on a log scale.
 - Some differences between `list` and `numpy`
   ```python
   [1, 2, 3] * 2 >> [1, 2, 3, 1, 2, 3]
@@ -143,6 +146,7 @@
 
 ###### Pandas
 
+- `pd.DataFrame().info()`, `pd.DataFrame().head()`, `pd.DataFrame().describe()`
 - `pd.DataFrame(dict)`
 - `pd.DataFrame(dict).index` changes `index` values
   ```python
@@ -403,6 +407,13 @@
   pd.DataFrame().plot(kind='scatter', x='Year', y='Total Urban Population')
   plt.show()
   ```
+- `pd.dataFrame(...).boxplot(y_col_name, x_col_name, rot)`
+- Correlation with `pandas`
+  `corr()` measures the correlation coefficient of every pair in DataFrame.
+  ```python
+  sns.heatmap(pd.DataFrame().corr(), square=True, cmap='RdYlGn)
+  ```
+  ![Heatmap Sample](assets/corr_heatmap_sample.svg 'Heatmap Sample')
 
 ###### Looping
 
@@ -686,6 +697,11 @@
   print(new_fellowship)
   ```
 
+- `pd.get_dummies(df)` returns converted categorical data as dummy variables
+- `pd.get_dummies(df, drop_first=True)` returns converted data as dummy variables from DataFrame but without the first categorical column
+- `df.dropna()` drops the null values
+- `df.isnull()` generates values as true or false as there anu nul values or not
+
 ###### Generator Expressions
 
 - Examples
@@ -781,6 +797,8 @@
 
 > Statistical Thinking in Python (Part 1)
 
+###### Seaborn
+
 - sns.set() sets `seaborn` as default style for `matplotlib`
   ```python
   # Import plotting modules
@@ -802,6 +820,7 @@
   plt.xticks([0,1], ['No', 'Yes'])
   plt.show()
   ```
+- `sns.heatmap(data, square, cmap)`
 
 ###### Empirical cumulative distribution function (ECDF)
 
@@ -1145,7 +1164,642 @@ A mathematical description of outcomes.
 
   ![Exponential CDF](assets/exp_cdf.svg 'Exponential CDF')
 
+> Supervised Learning with scikit-learn
+
+###### Datasets
+
+- `sklearn.datasets.load_digits()`, sample program related to `datasets` module is given as follows:
+
+  ```python
+  # Import necessary modules
+  from sklearn import datasets
+  import matplotlib.pyplot as plt
+
+  # Load the digits dataset: digits
+  digits = datasets.load_digits()
+
+  # Print the keys and DESCR of the dataset
+  print(digits.keys())
+  # dict_keys(['data', 'target', 'target_names', 'images', 'DESCR'])
+  print(digits['DESCR'])
+
+  # Print the shape of the images and data keys
+  print(digits.images.shape)
+  print(digits.data.shape)
+  # (1797, 8, 8)
+  # (1797, 64)
+
+  # Display digit 1010
+  plt.imshow(digits.images[1010], cmap=plt.cm.gray_r, interpolation='nearest')
+  plt.show()
+  ```
+
+###### Classification
+
+- `sklearn.neighbors.KNeighborsClassifier()`
+- `sklearn.neighbors.KNeighborsClassifier().fit(x_train, y_train)`
+- `sklearn.neighbors.KNeighborsClassifier().predict(x_test)`
+- `sklearn.neighbors.KNeighborsClassifier().score(x_test, y_test)`
+
+###### Regression
+
+- `sklearn.linear_model.LinearRegression()`
+
+###### Regularized regression
+
+- Linear regression minimizes a loss function. It chooses a coeffient for each feature variable and large coefficient can lead to overfitting.
+  So the regularization is to penalize this large coefficients.
+  ![OLS, Redge and Lasso formula](assets/ols_redge_lasso.png 'OLS, Redge and Lasso formula')
+  Here,
+  λ = we need to choose
+  Θ = coeeficients
+  k = number of coeeficients
+  λ value can be picked as like as hyperparameter tuning and it controls model complexity like:
+  - λ = 0: we got back OLS(can lead to overfitting)
+  - very high λ: can lead to underfitting
+- Lasso(least absolute shrinkage and selection operator) regression can be used to select important features of a dataset because it shrinks the coefficient to less important features to exactly 0.
+  ![Lasso feature](assets/lasso_feature.png 'Lasso feature')
+  Example
+
+  ```python
+  # Import Lasso
+  from sklearn.linear_model import Lasso
+
+  # Instantiate a lasso regressor: lasso
+  lasso = Lasso(alpha=0.4, normalize=True)
+
+  # Fit the regressor to the data
+  lasso.fit(X, y)
+
+  # Compute and print the coefficients
+  lasso_coef = lasso.coef_
+  print(lasso_coef)
+
+  # Plot the coefficients
+  plt.plot(range(len(df_columns)), lasso_coef)
+  plt.xticks(range(len(df_columns)), df_columns.values, rotation=60)
+  plt.margins(0.02)
+  plt.show()
+  ```
+
+  ![LASSO output](assets/lasso_output.svg 'LASSO output')
+  It seems like `child_mortality` is the most important feature when predicting life expectancy.
+
+- Lasso is great for feature selection, but when building regression models, Ridge regression should be your first choice.
+  Recall that lasso performs regularization by adding to the loss function a penalty term of the absolute value of each coefficient multiplied by some alpha. This is also known as **L<sub>1</sub>** regularization because the regularization term is the **L<sub>1</sub>** norm of the coefficients. This is not the only way to regularize, however.
+  If instead you took the sum of the squared values of the coefficients multiplied by some alpha - like in Ridge regression - you would be computing the **L<sub>2</sub>** norm.
+
+  ```python
+  # Import necessary modules
+  from sklearn.linear_model import Ridge
+  from sklearn.model_selection import cross_val_score
+
+  def display_plot(cv_scores, cv_scores_std):
+    fig = plt.figure()
+    ax = fig.add_subplot(1,1,1)
+    ax.plot(alpha_space, cv_scores)
+
+    std_error = cv_scores_std / np.sqrt(10)
+
+    ax.fill_between(alpha_space, cv_scores + std_error, cv_scores - std_error, alpha=0.2)
+    ax.set_ylabel('CV Score +/- Std Error')
+    ax.set_xlabel('Alpha')
+    ax.axhline(np.max(cv_scores), linestyle='--', color='.5')
+    ax.set_xlim([alpha_space[0], alpha_space[-1]])
+    ax.set_xscale('log')
+    plt.show()
+
+  # Setup the array of alphas and lists to store scores
+  alpha_space = np.logspace(-4, 0, 50)
+  ridge_scores = []
+  ridge_scores_std = []
+
+  # Create a ridge regressor: ridge
+  ridge = Ridge(normalize=True)
+
+  # Compute scores over range of alphas
+  for alpha in alpha_space:
+
+      # Specify the alpha value to use: ridge.alpha
+      ridge.alpha = alpha
+
+      # Perform 10-fold CV: ridge_cv_scores
+      ridge_cv_scores = cross_val_score(ridge, X, y, cv=10)
+
+      # Append the mean of ridge_cv_scores to ridge_scores
+      ridge_scores.append(np.mean(ridge_cv_scores))
+
+      # Append the std of ridge_cv_scores to ridge_scores_std
+      ridge_scores_std.append(np.std(ridge_cv_scores))
+
+  # Display the plot
+  display_plot(ridge_scores, ridge_scores_std)
+  ```
+
+  ![Ridge out](assets/ridge_out.svg 'Ridge Out')
+
+###### Logistic Regression
+
+- `sklearn.linear_model.LogisticRegression()`
+- `sklearn.linear_model.LogisticRegression().predict_proba(x_test)` The returned estimates for all classes are ordered by the label of classes.
+  ```python
+  y_pred_prob = logreg.predict_proba(X_test)
+  print(y_pred_proba[:5])
+  >>> array([[0.60409835, 0.39590165],
+       [0.76042394, 0.23957606],
+       [0.79670177, 0.20329823],
+       [0.77236009, 0.22763991],
+       [0.57194882, 0.42805118]])
+  y_pred_prob[:5, 0] + y_pred_prob[:5, 1]
+  >>> array([1., 1., 1., 1., 1.])
+  ```
+  Which means that this method output the binary predicted value for both classes. 0 index consists of '0' class prediction value and 1 number index consists of '1' class prediction value.
+
+###### ElasticNet
+
+Remember lasso and ridge regression from the previous chapter? Lasso used the **L<sub>1</sub>** penalty to regularize, while ridge used the **L<sub>2</sub>** penalty. There is another type of regularized regression known as the elastic net. In elastic net regularization, the penalty term is a linear combination of the **L<sub>1</sub>** and **L<sub>2</sub>** penalties:
+<img src="https://render.githubusercontent.com/render/math?math=\LARGE a \times L_1 %2B b \times L_2">
+In scikit-learn, this term is represented by the `l1_ratio` parameter: An `l1_ratio` of 1 corresponds to an **L<sub>1</sub>** penalty, and anything lower is a combination of **L<sub>1</sub>** and **L<sub>2</sub>**.
+Example:
+
+```python
+# Import necessary modules
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import ElasticNet
+from sklearn.metrics import mean_squared_error
+
+# Create train and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.4, random_state=42)
+
+# Create the hyperparameter grid
+l1_space = np.linspace(0, 1, 30)
+param_grid = {'l1_ratio': l1_space}
+
+# Instantiate the ElasticNet regressor: elastic_net
+elastic_net = ElasticNet()
+
+# Setup the GridSearchCV object: gm_cv
+gm_cv = GridSearchCV(elastic_net, param_grid, cv=5)
+```
+
+###### Measuring model performance
+
+- `sklearn.model_selection.train_test_split(x, y, test_size, random_state, stratify)`
+  This stratify parameter makes a split so that the proportion of values in the sample produced will be the same as the proportion of values provided to parameter stratify.
+  For example, if variable y is a binary categorical variable with values 0 and 1 and there are 25% of zeros and 75% of ones, stratify=y will make sure that your random split has 25% of 0's and 75% of 1's.[[src](https://stackoverflow.com/a/38889389/8809538)]
+  ```python
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = .2, random_state=42, stratify=y)
+  ```
+- Overfitting and Underfitting test code example
+
+  ```python
+  # Setup arrays to store train and test accuracies
+  neighbors = np.arange(1, 9)
+  train_accuracy = np.empty(len(neighbors))
+  test_accuracy = np.empty(len(neighbors))
+
+  # Loop over different values of k
+  for i, k in enumerate(neighbors):
+      # Setup a k-NN Classifier with k neighbors: knn
+      knn = KNeighborsClassifier(n_neighbors=k)
+
+      # Fit the classifier to the training data
+      knn.fit(X_train, y_train)
+
+      #Compute accuracy on the training set
+      train_accuracy[i] = knn.score(X_train, y_train)
+
+      #Compute accuracy on the testing set
+      test_accuracy[i] = knn.score(X_test, y_test)
+
+  # Generate plot
+  plt.title('k-NN: Varying Number of Neighbors')
+  plt.plot(neighbors, test_accuracy, label = 'Testing Accuracy')
+  plt.plot(neighbors, train_accuracy, label = 'Training Accuracy')
+  plt.legend()
+  plt.xlabel('Number of Neighbors')
+  plt.ylabel('Accuracy')
+  plt.show()
+  ```
+
+  ![Overfitting and Underfitting](assets/overfit_underfit.svg 'Overfitting and Underfitting')
+  It looks like the test accuracy is highest when using 3 and 5 neighbors. Using 8 neighbors or more seems to result in a simple model that underfits the data.
+  There is a good [article](https://towardsdatascience.com/learning-curve-to-identify-overfitting-underfitting-problems-133177f38df5).
+
+- `sklearn.metrics.mean_squared_error(y_true, y_pred)`
+  ![MSE Error](assets/mse_formula.png 'MSE Error')
+- `model.score()` gives the R<sup>2</sup> score
+  ![R^2 score](assets/R_Squared_Computation.png 'R^2 Score')
+- Example code for those two:
+
+  ```python
+  # Import necessary modules
+  from sklearn.linear_model import LinearRegression
+  from sklearn.model_selection import train_test_split
+  from sklearn.metrics import mean_squared_error
+
+  # Create training and test sets
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = .3, random_state=42)
+
+  # Create the regressor: reg_all
+  reg_all = LinearRegression()
+
+  # Fit the regressor to the training data
+  reg_all.fit(X_train, y_train)
+
+  # Predict on the test data: y_pred
+  y_pred = reg_all.predict(X_test)
+
+  # Compute and print R^2 and RMSE
+  print("R^2: {}".format(reg_all.score(X_test, y_test)))
+  # R^2: 0.838046873142936
+  rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+  print("Root Mean Squared Error: {}".format(rmse))
+  # Root Mean Squared Error: 3.2476010800377213
+  ```
+
+- Pitfall of `train_test_split`
+  - Model performance is dependent on way the data is split, if the data for train set was being selected as a way that those are not representative of the rest, then model is not performed well and this can not be oevercome by `train_test_split` because it's a random selection process.
+  - Not representative of the model's ability to generalize
+    Solution: k-fold cross validation but more folds add more computational power.
+- `sklearn.model_selection.cross_val_score(estimator, X, y, cv)`
+
+  ```python
+  # Import the necessary modules
+  from sklearn.linear_model import LinearRegression
+  from sklearn.model_selection import cross_val_score
+
+  # Create a linear regression object: reg
+  reg = LinearRegression()
+
+  # Compute 5-fold cross-validation scores: cv_scores
+  cv_scores = cross_val_score(reg, X, y, cv=5)
+
+  # Print the 5-fold cross-validation scores
+  print(cv_scores)
+  # [0.81720569 0.82917058 0.90214134 0.80633989 0.94495637]
+  print("Average 5-Fold CV Score: {}".format(np.mean(cv_scores)))
+  # Average 5-Fold CV Score: 0.8599627722793232
+  ```
+
+###### `sklearn` precaustions
+
+- If we want to use one feature in `sklearn` from `pandas` then we have to reshape the data same as follows:
+
+  ```python
+  # Import numpy and pandas
+  import numpy as np
+  import pandas as pd
+
+  # Read the CSV file into a DataFrame: df
+  df = pd.read_csv('gapminder.csv')
+
+  # Create arrays for features and target variable
+  y = df.life
+  X = df.fertility
+
+  # Print the dimensions of y and X before reshaping
+  print("Dimensions of y before reshaping: ", y.shape)
+  print("Dimensions of X before reshaping: ", X.shape)
+
+  # Dimensions of y before reshaping:  (139,)
+  # Dimensions of X before reshaping:  (139,)
+
+  # Reshape X and y
+  y_reshaped = y.reshape(-1, 1)
+  X_reshaped = X.reshape(-1, 1)
+
+  # Print the dimensions of y_reshaped and X_reshaped
+  print("Dimensions of y after reshaping: ", y_reshaped.shape)
+  print("Dimensions of X after reshaping: ", X_reshaped.shape)
+
+  # Dimensions of y after reshaping:  (139, 1)
+  # Dimensions of X after reshaping:  (139, 1)
+  """
+  before:
+  0    2.73
+  1    6.43
+  2    2.24
+  3    1.40
+  4    1.96
+  Name: fertility, dtype: float
+
+  after:
+  array([[2.73],
+        [6.43],
+        [2.24],
+        [1.4 ],
+        [1.96]])
+  """
+  ```
+
+- Sometimes prediction space for one feature can be genreted as follows:
+  ```python
+  prediction_space = np.linspace(min(X_fertility), max(X_fertility)).reshape(-1,1)
+  print(prediction_space.shape)
+  # (50, 1)
+  ```
+
+###### Fine-tuning your model
+
+- Measuring model performance with accuracy:
+
+  - Fraction of correctly classified samples
+  - Not always a useful metric
+
+  Consider a spam classification problem in which 99% of emails are real and only 1% are spam. I could build a model that classifies all emails as real; this model would be correct 99% of the time and thus have an accuracy of 99%, which sounds great. However, this naive classifier does a horrible job of predicting spam: it never predicts spam at all, so it completely fails at its original purpose. The situation when one class is more frequent is called class imbalance because the class of real emails contains way more instances than the class of spam. This is a very common situation in practice and requires a more nuanced metric to assess the performance of our model.
+  [How to solve the zero-frequency problem in Naive Bayes?](https://medium.com/atoti/how-to-solve-the-zero-frequency-problem-in-naive-bayes-cd001cabe211)
+  For these problems some other metric can be helpful.
+
+- Confusion matrix
+  |Classes|Predicted: Spam Email|Predicted: Spam Email|
+  ---- | ---- | ---- |
+  |Actual: Spam Email|True Positive|False Negative|
+  |Actual: Real Email|False Positive|True Negative|
+
+  - True Positive means number of spam emails correctly labeled
+  - True Negative means number of real emails correcly labeled
+  - False Negative means number of spam emails incorrectly labeled
+  - False Positive means number of real emails incorrectly labeled
+
+  Usually the _class of interest_ is called the positive class. Here we are trying to detect spam emails so it makes spam emails as positive class.
+  <img src="https://render.githubusercontent.com/render/math?math=\LARGE accuracy=\frac{t_p %2B t_n}{t_p %2B t_n %2B f_p %2B f_n}">
+  <img src="https://render.githubusercontent.com/render/math?math=\LARGE precision=\frac{t_p}{t_p %2B f_p}">
+  It is also called _Positive Predictive Value(PPV)_. In this case it can be written as follows:
+  <img src="https://render.githubusercontent.com/render/math?math=\LARGE precision=\frac{total \space\space number \space\space of \space\space correctly \space\space labeled \space\space spam}{total \space\space number \space\space of \space\space emails \space\space classified \space\space as \space\space spam}">
+
+    <img src="https://render.githubusercontent.com/render/math?math=\LARGE specificity= \frac{t_n}{t_n %2B f_p}">
+
+    <img src="https://render.githubusercontent.com/render/math?math=\LARGE recall \space\space or \space\space sensitivity=\frac{t_p }{t_p %2B f_n}">
+
+  This is also called _sensitivity_, _hit rate_ or _true positive rate_.
+  _Note that in binary classification, recall of the positive class is also known as “sensitivity”; recall of the negative class is “specificity”._[[src](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html)]
+  <img src="https://render.githubusercontent.com/render/math?math=\LARGE f_1=2 \times \frac{precision \times recall}{precision %2B recall}">
+  It is also called the _harmonic mean of precision and recall_.
+
+  - High precision(low false positive rate): Not many real emails were predicted as being spam.
+  - High recall: Predicted most positive or spam emails correctly.
+  - `sklearn.metrics.confusion_matrix(y_true, y_pred)`
+  - `sklearn.metrics.classification_report(y_true, y_pred)`
+  - Example:
+
+    ```python
+    # Import necessary modules
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import confusion_matrix, classification_report
+
+    # Create training and test set
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.4, random_state=42)
+
+    # Instantiate a k-NN classifier: knn
+    knn = KNeighborsClassifier(n_neighbors=6)
+
+    # Fit the classifier to the training data
+    knn.fit(X_train, y_train)
+
+    # Predict the labels of the test data: y_pred
+    y_pred = knn.predict(X_test)
+
+    # Generate the confusion matrix and classification report
+    print(confusion_matrix(y_test, y_pred))
+    print(classification_report(y_test, y_pred))
+    """
+    [[176  30]
+    [ 52  50]]
+                precision    recall  f1-score   support
+
+              0       0.77      0.85      0.81       206
+              1       0.62      0.49      0.55       102
+
+    avg / total       0.72      0.73      0.72       308
+    """
+    ```
+
+    Here avg/total means(sample for one example):
+    avg is the weighted mean of those three categories.
+    <img src="https://render.githubusercontent.com/render/math?math=\LARGE avg =\frac{0.77 \times 206 %2B 0.62 \times 102 }{206 %2B 102}=0.72">
+    <img src="https://render.githubusercontent.com/render/math?math=\LARGE total=206 %2B 102 = 308">
+
+- Receiver Operating Characteristic(ROC) curve
+  ![ROC curve](assets/roc_curve.png 'ROC Curve')
+
+  - `false_pos_rate, true_pos_rate, thresholds = sklearn.metrics.roc_curve(y_true, y_score)`
+
+    ```python
+    # Import necessary modules
+    from sklearn.metrics import roc_curve
+
+    # Compute predicted probabilities: y_pred_prob
+    y_pred_prob = logreg.predict_proba(X_test)[:,1]
+
+    # Generate ROC curve values: fpr, tpr, thresholds
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+
+    # Plot ROC curve
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.plot(fpr, tpr)
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve')
+    plt.show()
+    ```
+
+    ![ROC curve example](assets/roc_curve_example.svg 'ROC curve example')
+    _Note: the y-axis (True positive rate) is also known as recall._
+
+- Area under the ROC curve(AUC)
+  Larger area under the ROC curve = better model
+  Say you have a binary classifier that in fact is just randomly making guesses. It would be correct approximately 50% of the time, and the resulting ROC curve would be a diagonal line in which the True Positive Rate and False Positive Rate are always equal. The Area under this ROC curve would be 0.5.
+  It can be computed in direct classifier or with cross validation as follows:
+
+  ```python
+  # Import necessary modules
+  from sklearn.model_selection import cross_val_score
+  from sklearn.metrics import roc_auc_score
+
+  # Compute predicted probabilities: y_pred_prob
+  y_pred_prob = logreg.predict_proba(X_test)[:,1]
+
+  # Compute and print AUC score
+  print("AUC: {}".format(roc_auc_score(y_test, y_pred_prob)))
+
+  # Compute cross-validated AUC scores: cv_auc
+  cv_auc = cross_val_score(LogisticRegression(), X, y, cv=5, scoring='roc_auc')
+
+  # Print list of AUC scores
+  print("AUC scores computed using 5-fold cross-validation: {}".format(cv_auc))
+
+  ```
+
+- Precision-Recall curve
+  _Note that here, the class is positive (1) if the individual has diabetes._
+  ![Precision-Recall curve](assets/precision_recall_curve.svg 'Precision-Recall curve')
+  - A recall of 1 corresponds to a classifier with a low threshold in which all females who contract diabetes were correctly classified as such, at the expense of many misclassifications of those who did not have diabetes.
+  - Precision is undefined for a classifier which makes no positive predictions, that is, classifies everyone as not having diabetes.
+  - When the threshold is very close to 1, precision is also 1, because the classifier is absolutely certain about its predictions.
+  - Precision and recall do not take true negatives into consideration. They do not appear at all in the definitions of precision and recall.
+- Hyperparameter tuning
+  These are the parameters those can be expicitely learned by fitting the model.
+  Algorithm:
+
+  - Try a bunch of different hyperparameter values
+  - Fit all of them seprately
+  - See how well each performs
+  - Choose the best performing one
+  - It is essential to use cross-validation
+  - `sklearn.model_selection.GridSearchCV(estimator, param_grid, cv)`
+    ![GridSearchCV](assets/grid_search_cv.png 'GridSearchCV')
+    - `.best_params_()`
+    - `.best_score_()`
+  - `sklearn.model_selection.RandomizedSearchCV(estimator, param_grid, cv)`
+    GridSearchCV can be computationally expensive, especially if you are searching over a large hyperparameter space and dealing with multiple hyperparameters. A solution to this is to use RandomizedSearchCV, in which not all hyperparameter values are tried out. Instead, a fixed number of hyperparameter settings is sampled from specified probability distributions.
+
+    ```python # Import necessary modules
+    from scipy.stats import randint
+    from sklearn.model_selection import RandomizedSearchCV
+    from sklearn.tree import DecisionTreeClassifier
+
+    # Setup the parameters and distributions to sample from: param_dist
+    param_dist = {"max_depth": [3, None],
+                  "max_features": randint(1, 9),
+                  "min_samples_leaf": randint(1, 9),
+                  "criterion": ["gini", "entropy"]}
+    # Instantiate a Decision Tree classifier: tree
+    tree = DecisionTreeClassifier()
+
+    # Instantiate the RandomizedSearchCV object: tree_cv
+    tree_cv = RandomizedSearchCV(tree, param_dist, cv=5)
+    # you can use train_test_split as well
+    tree_cv.fit(X, y)
+    # Print the tuned parameters and score
+    print("Tuned Decision Tree Parameters: {}".format(tree_cv.best_params_))
+    print("Best score is {}".format(tree_cv.best_score_))
+    # Tuned Decision Tree Parameters: {'criterion': 'gini', 'max_depth': 3, 'max_features': 5, 'min_samples_leaf': 2}
+    # Best score is 0.7395833333333334
+    ```
+
+    _Note that RandomizedSearchCV will never outperform GridSearchCV. Instead, it is valuable because it saves on computation time._
+
+- Some important thoughts to maintain
+
+  - How well can the model performon never before seen data?
+  - Using all data for cross-validation is not ideal
+  - Split data into training and hold-out set at the begining
+  - Perform grid search cross-validation on training set
+  - Choose best hyperparameters and evaluate on hold-out set
+
+- Handling missing data and Pipeline
+  When many values in your dataset are missing, if you drop them, you may end up throwing away valuable information along with the missing data. It's better instead to develop an imputation strategy. This is where domain knowledge is useful, but in the absence of it, you can impute missing values with the mean or the median of the row or column that the missing value is in.
+
+  ```python
+  # Import necessary modules
+  from sklearn.preprocessing import Imputer
+  from sklearn.pipeline import Pipeline
+  from sklearn.svm import SVC
+
+  # Setup the pipeline steps: steps
+  steps = [('imputation', Imputer(missing_values='NaN', strategy='most_frequent', axis=0)),
+          ('SVM', SVC())]
+
+  # Create the pipeline: pipeline
+  pipeline = Pipeline(steps)
+
+  # Create training and test sets
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=42)
+
+  # Fit the pipeline to the train set
+  pipeline.fit(X_train, y_train)
+
+  # Predict the labels of the test set
+  y_pred = pipeline.predict(X_test)
+
+  # Compute metrics
+  print(classification_report(y_test, y_pred))
+  """
+              precision    recall  f1-score   support
+
+    democrat       0.96      0.99      0.98        83
+  republican       0.98      0.94      0.96        48
+
+  avg / total       0.97      0.97      0.97       131
+  """
+  ```
+
+- Centering and scaling
+  Ways to normalize data
+
+  - Standardization: Substract the mean and divided by variance
+  - All features are centered around zero and have variance one
+  - Can also substract the minimum and divide by the range
+  - Minimum zero and maximum one
+  - Can also normalize so the data ranges from -1 to 1
+  - `sklearn.preprocessing.scale(x)`
+    Example with standard scaler:
+
+    ```python
+    # Import the necessary modules
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.pipeline import Pipeline
+
+    # Setup the pipeline steps: steps
+    steps = [('scaler', StandardScaler()),
+            ('knn', KNeighborsClassifier())]
+
+    # Create the pipeline: pipeline
+    pipeline = Pipeline(steps)
+
+    # Create train and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3, random_state=42)
+
+    # Fit the pipeline to the training set: knn_scaled
+    knn_scaled = pipeline.fit(X_train, y_train)
+
+    # Instantiate and fit a k-NN classifier to the unscaled data
+    knn_unscaled = KNeighborsClassifier().fit(X_train, y_train)
+
+    # Compute and print metrics
+    print('Accuracy with Scaling: {}'.format(knn_scaled.score(X_test, y_test)))
+    print('Accuracy without Scaling: {}'.format(knn_unscaled.score(X_test, y_test)))
+    # Accuracy with Scaling: 0.7700680272108843
+    # Accuracy without Scaling: 0.6979591836734694
+    ```
+
+  - Example with pipeline:
+
+    ```python
+    # Setup the pipeline steps: steps
+    steps = [('imputation', Imputer(missing_values='NaN', strategy='mean', axis=0)),
+            ('scaler', StandardScaler()),
+            ('elasticnet', ElasticNet())]
+
+    # Create the pipeline: pipeline
+    pipeline = Pipeline(steps)
+
+    # Specify the hyperparameter space
+    parameters = {'elasticnet__l1_ratio':np.linspace(0,1,30)}
+
+    # Create train and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.4, random_state=42)
+
+    # Create the GridSearchCV object: gm_cv
+    gm_cv = GridSearchCV(pipeline, parameters)
+
+    # Fit to the training set
+    gm_cv.fit(X_train, y_train)
+
+    # Compute and print the metrics
+    r2 = gm_cv.score(X_test, y_test)
+    print("Tuned ElasticNet Alpha: {}".format(gm_cv.best_params_))
+    print("Tuned ElasticNet R squared: {}".format(r2))
+    # Tuned ElasticNet Alpha: {'elasticnet__l1_ratio': 1.0}
+    # Tuned ElasticNet R squared: 0.8862016570888217
+    ```
+
 > References
 
 - [Images](https://google.com/)
 - [DataCamp](https://learn.datacamp.com/)
+- [stackoverflow](https://stackoverflow.com/)
+- [towardsdatascience](https://towardsdatascience.com/)
+- [medium](https://medium.com/)
+- [scikit-learn](https://scikit-learn.org/stable/)
